@@ -539,6 +539,31 @@ double mysqlex_get_field_double_I( struct mysqlex_resultset *rs, unsigned int fi
 	return 0;
 }
 
+MYSQL_TIME mysqlex_get_field_time( struct mysqlex_resultset *rs, const char *field_name )
+{
+	unsigned int index;
+	MYSQL_TIME tm = { 0 };
+
+	if ( !mysqlex_get_field_index( rs, field_name, &index ) )
+	{
+		return tm;
+	}
+
+	return mysqlex_get_field_time_I( rs, index );
+}
+
+MYSQL_TIME mysqlex_get_field_time_I( struct mysqlex_resultset *rs, unsigned int field_index )
+{
+	MYSQL_TIME tm = { 0 };
+
+	if ( rs->current->field_count > field_index )
+	{
+		return mysqlex_column_get_time( &rs->current->rows[rs->current->cursor][field_index] );
+	}
+
+	return tm;
+}
+
 bool mysqlex_get_field_string( struct mysqlex_resultset *rs, const char *field_name, char *buffer, size_t length )
 {
 	unsigned int index;

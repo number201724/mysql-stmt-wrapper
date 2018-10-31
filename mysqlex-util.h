@@ -71,6 +71,9 @@ float mysqlex_get_field_float_I( struct mysqlex_resultset *rs, unsigned int fiel
 double mysqlex_get_field_double( struct mysqlex_resultset *rs, const char *field_name );
 double mysqlex_get_field_double_I( struct mysqlex_resultset *rs, unsigned int field_index );
 
+MYSQL_TIME mysqlex_get_field_time( struct mysqlex_resultset *rs, const char *field_name );
+MYSQL_TIME mysqlex_get_field_time_I( struct mysqlex_resultset *rs, unsigned int field_index );
+
 bool mysqlex_get_field_string( struct mysqlex_resultset *rs, const char *field_name, char *buffer, size_t length );
 bool mysqlex_get_field_string_I( struct mysqlex_resultset *rs, unsigned int field_index, char *buffer, size_t length );
 
