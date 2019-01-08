@@ -519,6 +519,42 @@ int mysqlex_get_fields( MYSQL_STMT *stmt, struct mysqlex_result *r )
 	return 0;
 }
 
+static unsigned long get_type_size( MYSQL_FIELD *field )
+{
+	unsigned long size = 0;
+	switch ( field->type )
+	{
+		case MYSQL_TYPE_TINY:
+			size = sizeof( signed char );
+			break;
+		case MYSQL_TYPE_SHORT:
+			size = sizeof( short int );
+			break;
+		case MYSQL_TYPE_FLOAT:
+			size = sizeof( float );
+			break;
+		case MYSQL_TYPE_LONG:
+		case MYSQL_TYPE_INT24:
+			size = sizeof( int );
+			break;
+		case MYSQL_TYPE_DOUBLE:
+		case MYSQL_TYPE_LONGLONG:
+			size = sizeof( my_ulonglong );
+			break;
+		case MYSQL_TYPE_TIME:
+		case MYSQL_TYPE_DATE:
+		case MYSQL_TYPE_DATETIME:
+		case MYSQL_TYPE_TIMESTAMP:
+		case MYSQL_TYPE_TIMESTAMP2:
+			size = sizeof( MYSQL_TIME );
+			break;
+		default:
+			size = field->length;
+			break;
+	}
+	return size;
+}
+
 void mysqlex_build_result_bnd( struct mysqlex *db, struct mysqlex_result *result, MYSQL_BIND **output )
 {
 	unsigned int i;
@@ -531,7 +567,7 @@ void mysqlex_build_result_bnd( struct mysqlex *db, struct mysqlex_result *result
 
 	for ( i = 0; i < result->field_count; i++ )
 	{
-		totalsize += result->fields[i].length;
+		totalsize += get_type_size( &result->fields[i] );
 	}
 
 	bindparams = (MYSQL_BIND *)malloc( totalsize );
@@ -542,17 +578,17 @@ void mysqlex_build_result_bnd( struct mysqlex *db, struct mysqlex_result *result
 
 	memset( bindparams, 0, totalsize );
 
-	lengths = (unsigned long *)&bindparams[result->field_count];
-	dataseg = (unsigned char *)&lengths[result->field_count];
+	lengths = (unsigned long *)(&bindparams[result->field_count]);
+	dataseg = (unsigned char *)(&lengths[result->field_count]);
 
 	for ( i = 0; i < result->field_count; i++ )
 	{
 		bindparams[i].buffer_type = result->fields[i].type;
 		bindparams[i].length = &lengths[i];
-		bindparams[i].buffer_length = result->fields[i].length;
+		bindparams[i].buffer_length = get_type_size( &result->fields[i] );
 		bindparams[i].buffer = dataseg;
 		bindparams[i].is_unsigned = (result->fields[i].flags & UNSIGNED_FLAG) != 0;
-
+		
 		dataseg += bindparams[i].buffer_length;
 	}
 
